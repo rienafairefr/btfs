@@ -1,0 +1,37 @@
+{
+    // Use IntelliSense to learn about possible attributes.
+    // Hover to view descriptions of existing attributes.
+    // For more information, visit: https://go.microsoft.com/fwlink/?linkid=830387
+    "version": "0.2.0",
+    
+    "configurations": [
+        {
+            "name": "Launch with gdb",
+            "type": "cppdbg",
+            "request": "launch",
+            "program": "${workspaceFolder}/src/btfs",
+            "args": ["-f", "--min-port=6881","--max-port=6881", "scripts/sintel.torrent", "/tmp/Sintel"],
+            "preLaunchTask": "mkdir",
+            "stopAtEntry": false,
+            "cwd": "${workspaceFolder}",
+            "environment": [],
+            "externalConsole": false,
+            "MIMode": "gdb",
+            "setupCommands": [
+                {
+                    "description": "Enable pretty-printing for gdb",
+//                    "text": "-enable-pretty-printing",
+                    "text": "python import sys;sys.path.insert(0, '/usr/share/gcc-8/python');from libstdcxx.v6.printers import register_libstdcxx_printers;register_libstdcxx_printers(None)",
+
+                    "ignoreFailures": true
+                },
+                {
+                    "description": "Set Disassembly Flavor to Intel",
+                    "text": "-gdb-set disassembly-flavor intel",
+                    "ignoreFailures": true
+                }
+            ],
+            "postDebugTask": "umount",
+        }
+    ]
+}

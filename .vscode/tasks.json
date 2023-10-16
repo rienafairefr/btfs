@@ -1,0 +1,21 @@
+{
+    "tasks": [
+        {
+            "label": "mkdir",
+            "type": "shell",
+            "command": "mkdir", // Could be any other shell command
+            "args": ["-p","/tmp/Sintel"],
+        },
+        {
+            "label": "compile",
+            "command": "make -C src/ btfs",
+            "type": "shell"
+        },
+        {
+            "label": "umount",
+            "type":"shell",
+            "command": "bash",
+            "args": ["${workspaceFolder}/scripts/umount.sh"]
+        }
+    ]
+}
