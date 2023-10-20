@@ -132,6 +132,7 @@ struct btfs_params {
 	int browse_only;
 	int keep;
 	int utp_only;
+	int no_fetch;
 	char *data_directory;
 	int min_port;
 	int max_port;

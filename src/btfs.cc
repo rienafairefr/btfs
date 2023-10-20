@@ -103,15 +103,13 @@ jump(piece_index_t piece, int size)
 		return;
 
 	cursor = tail;
-
-	for (int i = 0; i < 16; i++) {
-		handle.piece_priority(tail++, 7);
+	if (params.no_fetch){
+		for (int i = 0; i < 16; i++) {
+			handle.piece_priority(tail++, libtorrent::top_priority);
+		}
+	} else {
+		handle.piece_priority(tail, libtorrent::top_priority);
 	}
-}
-
-static void
-advance() {
-	jump(cursor, 0);
 }
 
 Read::Read(char *buf, file_index_t index, off_t offset, size_t size)
@@ -209,8 +207,15 @@ int Read::read() {
 	// Trigger reads of finished pieces
 	trigger();
 
-	// Move sliding window to first piece to serve this request
-	jump(parts.front().part.piece, size());
+	if (params.no_fetch) {
+		// Move sliding window to the wanted pieces to serve this request
+		for (parts_iter i = parts.begin(); i != parts.end(); ++i) {
+			jump(i->part.piece, size());
+		}
+	} else {
+		// Move sliding window to first piece to serve this request
+		jump(parts.front().part.piece, size());
+	}
 
 	while (!finished() && !failed)
 		// Wait for any piece to downloaded
@@ -228,8 +233,17 @@ setup() {
 
 	auto ti = handle.torrent_file();
 
-	if (params.browse_only)
+	if (params.browse_only) {
 		handle.pause();
+	} else {
+		if (params.no_fetch) {
+			std::vector<libtorrent::download_priority_t> file_priorities((unsigned int)ti->num_files(), libtorrent::dont_download);
+			handle.prioritize_files(file_priorities);
+
+			std::vector<libtorrent::download_priority_t> piece_priorities((unsigned int)ti->num_pieces(), libtorrent::dont_download);
+			handle.prioritize_pieces(piece_priorities);
+		}
+	}
 
 	for (int i = 0; i < ti->num_files(); ++i) {
 		std::string parent("");
@@ -969,6 +983,7 @@ static const struct fuse_opt btfs_opts[] = {
 	BTFS_OPT("-k",                           keep,                 1),
 	BTFS_OPT("--keep",                       keep,                 1),
 	BTFS_OPT("--utp-only",                   utp_only,             1),
+	BTFS_OPT("--no-fetch",                   no_fetch,             1),
 	BTFS_OPT("--data-directory=%s",          data_directory,       4),
 	BTFS_OPT("--min-port=%lu",               min_port,             4),
 	BTFS_OPT("--max-port=%lu",               max_port,             4),
@@ -1011,6 +1026,7 @@ print_help() {
 	printf("    --max-port=N           end of listen port range\n");
 	printf("    --max-download-rate=N  max download rate (in kB/s)\n");
 	printf("    --max-upload-rate=N    max upload rate (in kB/s)\n");
+	printf("    --no-fetch             don't automatically fetch all missing pieces (\n");
 }
 
 int
@@ -1083,10 +1099,10 @@ main(int argc, char *argv[]) {
 	libtorrent::add_torrent_params p;
 
 #if LIBTORRENT_VERSION_NUM < 10200
-	p.flags &= ~libtorrent::add_torrent_params::flag_auto_managed;
+	if (!params.no_fetch) p.flags &= ~libtorrent::add_torrent_params::flag_auto_managed;
 	p.flags &= ~libtorrent::add_torrent_params::flag_paused;
 #else
-	p.flags &= ~libtorrent::torrent_flags::auto_managed;
+	if (!params.no_fetch) p.flags &= ~libtorrent::torrent_flags::auto_managed;
 	p.flags &= ~libtorrent::torrent_flags::paused;
 #endif
 	p.save_path = target + "/files";
