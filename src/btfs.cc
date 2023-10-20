@@ -90,6 +90,10 @@ move_to_next_unfinished(int& piece, int num_pieces) {
 
 static void
 jump(int piece, int size) {
+{
+#ifdef DEBUG
+	printf("jump %d %d.\n", piece, size);
+#endif
 	auto ti = handle.torrent_file();
 
 	int tail = piece;
@@ -126,6 +130,10 @@ Read::Read(char *buf, int index, off_t offset, size_t size) {
 			ti->piece_size(part.piece) - part.start,
 			part.length);
 
+#ifdef DEBUG
+		printf("Read::Read push piece %d size %d", part.piece , part.length );
+#endif
+
 		parts.push_back(Part(part, buf));
 
 		size -= (size_t) part.length;
@@ -135,6 +143,9 @@ Read::Read(char *buf, int index, off_t offset, size_t size) {
 }
 
 void Read::fail(int piece) {
+#ifdef DEBUG
+	printf("Read::fail %d.\n", piece);
+#endif
 	for (parts_iter i = parts.begin(); i != parts.end(); ++i) {
 		if (i->part.piece == piece && !i->filled)
 			failed = true;
@@ -142,6 +153,9 @@ void Read::fail(int piece) {
 }
 
 void Read::copy(int piece, char *buffer, int size) {
+#ifdef DEBUG
+	printf("Read::copy %d.\n", piece);
+#endif
 	for (parts_iter i = parts.begin(); i != parts.end(); ++i) {
 		if (i->part.piece == piece && !i->filled)
 			i->filled = (memcpy(i->buf, buffer + i->part.start,
@@ -150,6 +164,9 @@ void Read::copy(int piece, char *buffer, int size) {
 }
 
 void Read::trigger() {
+#ifdef DEBUG
+	printf("Read::trigger.\n");
+#endif
 	for (parts_iter i = parts.begin(); i != parts.end(); ++i) {
 		if (handle.have_piece(i->part.piece))
 			handle.read_piece(i->part.piece);
@@ -157,6 +174,9 @@ void Read::trigger() {
 }
 
 bool Read::finished() {
+#ifdef DEBUG
+	printf("Read::finished.\n");
+#endif
 	for (parts_iter i = parts.begin(); i != parts.end(); ++i) {
 		if (!i->filled)
 			return false;
@@ -171,6 +191,9 @@ int Read::size() {
 	for (parts_iter i = parts.begin(); i != parts.end(); ++i) {
 		s += i->part.length;
 	}
+#ifdef DEBUG
+	printf("Read::size %d.\n", s);
+#endif
 
 	return s;
 }
@@ -273,12 +296,23 @@ handle_piece_finished_alert(libtorrent::piece_finished_alert *a, Log *log) {
 
 	pthread_mutex_lock(&lock);
 
+#ifdef DEBUG
+	auto piece_priorities = a->handle.piece_priorities();
+	std::cout << "Priorities " << piece_priorities.size() << " pieces:" << std::endl;
+	for (int i = 0; i < piece_priorities.size(); i++)
+	{
+		std::cout << piece_priorities.at(i);
+	}
+	std::cout << std::endl;
+#endif
 	for (reads_iter i = reads.begin(); i != reads.end(); ++i) {
 		(*i)->trigger();
 	}
 
 	// Advance sliding window
-	advance();
+	if (!params.no_fetch) {
+		jump(cursor, 0);
+	}
 
 	pthread_mutex_unlock(&lock);
 }
@@ -504,6 +538,9 @@ btfs_open(const char *path, struct fuse_file_info *fi) {
 static int
 btfs_read(const char *path, char *buf, size_t size, off_t offset,
 		struct fuse_file_info *fi) {
+#ifdef DEBUG
+	printf("btfs_read %d %d.\n", offset, size);
+#endif
 	if (!is_dir(path) && !is_file(path))
 		return -ENOENT;
 
