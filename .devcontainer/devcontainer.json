@@ -14,17 +14,17 @@
   //"mounts": ["type=bind source=/dev/fuse destination=/dev/fuse"],
   
   "runArgs": ["--device=/dev/fuse", "--name", "btfs-devcontainer"],
-"forwardPorts": [
-	"51413:6881"
-],
-"customizations": {
-	"vscode": {
-		"extensions": [
-			"ms-vscode.cpptools",
-			"Gruntfuggly.triggertaskonsave"
-		]
-	}
-}
+  "forwardPorts": [
+    "51413:6881"
+  ],
+  "customizations": {
+    "vscode": {
+      "extensions": [
+        "ms-vscode.cpptools",
+        "Gruntfuggly.triggertaskonsave"
+      ]
+    }
+  }
 
   // Features to add to the dev container. More info: https://containers.dev/features.
   // "features": {},

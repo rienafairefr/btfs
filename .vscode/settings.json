@@ -83,8 +83,13 @@
   "typeindex": "cpp",
   "typeinfo": "cpp",
   "variant": "cpp",
-  "format": "cpp"
+  "format": "cpp",
+  "csetjmp": "cpp",
+  "strstream": "cpp",
+  "regex": "cpp",
+  "shared_mutex": "cpp",
+  "cfenv": "cpp"
 },
-"editor.formatOnSave": true,
+"editor.formatOnSave": false,
 "editor.formatOnSaveMode": "modifications"
 }

@@ -1,21 +1,31 @@
 {
-    "tasks": [
-        {
-            "label": "mkdir",
-            "type": "shell",
-            "command": "mkdir", // Could be any other shell command
-            "args": ["-p","/tmp/Sintel"],
-        },
-        {
-            "label": "compile",
-            "command": "make -C src/ btfs",
-            "type": "shell"
-        },
-        {
-            "label": "umount",
-            "type":"shell",
-            "command": "bash",
-            "args": ["${workspaceFolder}/scripts/umount.sh"]
-        }
-    ]
+  "version": "2.0.0",
+  "tasks": [
+    {
+      "label": "mkdir",
+      "type": "shell",
+      "command": "bash",
+      "args": [
+        "${workspaceFolder}/scripts/start.sh"
+      ]
+    },
+    {
+      "label": "compile",
+      "command": "make -C src/ btfs",
+      "type": "shell",
+      "problemMatcher": [],
+      "group": {
+        "kind": "build",
+        "isDefault": true
+      }
+    },
+    {
+      "label": "umount",
+      "type": "shell",
+      "command": "bash",
+      "args": [
+        "${workspaceFolder}/scripts/umount.sh"
+      ]
+    }
+  ]
 }
