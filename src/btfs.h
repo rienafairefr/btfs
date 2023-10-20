@@ -29,6 +29,14 @@ along with BTFS.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "btfsstat.h"
 
+#if LIBTORRENT_VERSION_NUM > 12000
+typedef libtorrent::piece_index_t piece_index_t;
+typedef libtorrent::file_index_t file_index_t;
+#else
+typedef int piece_index_t;
+typedef int file_index_t;
+#endif
+
 namespace btfs
 {
 
@@ -58,11 +66,11 @@ private:
 class Read
 {
 public:
-	Read(char *buf, int index, off_t offset, size_t size);
+	Read(char *buf, file_index_t index, off_t offset, size_t size);
 
-	void fail(int piece);
+	void fail(piece_index_t piece);
 
-	void copy(int piece, char *buffer, int size);
+	void copy(piece_index_t piece, char *buffer, int size);
 
 	void trigger();
 

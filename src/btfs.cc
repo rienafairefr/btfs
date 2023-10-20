@@ -65,9 +65,9 @@ pthread_t alert_thread;
 std::list<Read*> reads;
 
 // First piece index of the current sliding window
-int cursor;
+libtorrent::piece_index_t cursor;
 
-std::map<std::string,int> files;
+std::map<std::string, file_index_t> files;
 std::map<std::string,std::set<std::string> > dirs;
 
 pthread_mutex_t lock = PTHREAD_MUTEX_INITIALIZER;
@@ -79,7 +79,8 @@ time_t time_of_mount;
 static struct btfs_params params;
 
 static bool
-move_to_next_unfinished(int& piece, int num_pieces) {
+move_to_next_unfinished(piece_index_t &piece, int num_pieces)
+{
 	for (; piece < num_pieces; piece++) {
 		if (!handle.have_piece(piece))
 			return true;
@@ -89,14 +90,14 @@ move_to_next_unfinished(int& piece, int num_pieces) {
 }
 
 static void
-jump(int piece, int size) {
+jump(piece_index_t piece, int size)
 {
 #ifdef DEBUG
 	printf("jump %d %d.\n", piece, size);
 #endif
 	auto ti = handle.torrent_file();
 
-	int tail = piece;
+	piece_index_t tail = piece;
 
 	if (!move_to_next_unfinished(tail, ti->num_pieces()))
 		return;
@@ -113,7 +114,8 @@ advance() {
 	jump(cursor, 0);
 }
 
-Read::Read(char *buf, int index, off_t offset, size_t size) {
+Read::Read(char *buf, file_index_t index, off_t offset, size_t size)
+{
 	auto ti = handle.torrent_file();
 
 #if LIBTORRENT_VERSION_NUM < 10100
@@ -142,7 +144,8 @@ Read::Read(char *buf, int index, off_t offset, size_t size) {
 	}
 }
 
-void Read::fail(int piece) {
+void Read::fail(piece_index_t piece)
+{
 #ifdef DEBUG
 	printf("Read::fail %d.\n", piece);
 #endif
@@ -152,7 +155,8 @@ void Read::fail(int piece) {
 	}
 }
 
-void Read::copy(int piece, char *buffer, int size) {
+void Read::copy(piece_index_t piece, char *buffer, int size)
+{
 #ifdef DEBUG
 	printf("Read::copy %d.\n", piece);
 #endif
@@ -779,7 +783,7 @@ btfs_getxattr(const char *path, const char *key, char *value, size_t len) {
 	std::string k(key);
 
 	if (is_file(path) && k == XATTR_FILE_INDEX) {
-		xattrlen = snprintf(xattr, sizeof (xattr), "%d", files[path]);
+		xattrlen = snprintf(xattr, sizeof(xattr), "%d", static_cast<int>(files[path]));
 	} else if (is_root(path) && k == XATTR_IS_BTFS_ROOT) {
 		xattrlen = 0;
 	} else if (k == XATTR_IS_BTFS) {
